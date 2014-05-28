@@ -1,0 +1,25 @@
+{
+  "name": "status-board",
+  "version": "1.0.0",
+  "description": "Display Trello data with Panic Status Board",
+  "main": "status_board.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cylinderStudio/status-board.git"
+  },
+  "author": "cylinder-studio",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.0.0",
+    "restler": "^3.2.1",
+    "http-auth": "^2.1.7",
+    "jade": "^1.3.1",
+    "stylus": "^0.43.1"
+  },
+  "engines": {
+    "node": "0.10.26"
+  }
+}

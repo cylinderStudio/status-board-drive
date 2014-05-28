@@ -1,0 +1,11 @@
+table#projects
+	tr
+		th(style='width:45px;')
+		th Team Member
+		th Status
+	each member in team_statuses
+		tr
+			td.projectPersons
+				img.person(style='margin-left:4px', src='/images/'+ member.id + '.png')
+			td.projectName #{member.name}
+			td.projectVersion #{member.status}
