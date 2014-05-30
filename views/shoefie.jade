@@ -1,11 +1,9 @@
-table#projects
+table#shoefies
 	tr
 		th(style='width:45px;')
-		th Team Member
-		th Status
-	each member in team_statuses
+		th Recent Shoefies
+	each shoefie in body
 		tr
-			td.projectPersons
-				img.person(style='margin-left:4px', src='/images/'+ member.id + '.png')
-			td.projectName #{member.name}
-			td.projectVersion #{member.status}
+			td.shoefieThumb
+				img.person(style='margin-left:4px', src=url.body.thumbnailLink)
+			td.shoefieName #{url.body.title}

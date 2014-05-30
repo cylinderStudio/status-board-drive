@@ -3,30 +3,20 @@ var express = require('express');
 var app = express();
 var rest = require('restler');
 var auth = require('http-auth');
-// var config = require('./creds/config');	// comment out if deploying to Heroku
+var config = require('./creds/config');	// comment out if deploying to Heroku
 var stylus = require('stylus');
 
-// constants for .gitignored local values or Heroku environment constants
-var BOARD = process.env.BOARD || config.trello.board;
-var APP_KEY = process.env.APP_KEY || config.trello.app_key;
-var APP_TOKEN = process.env.APP_TOKEN || config.trello.app_token;
-var MEMBER_ALLAN = process.env.MEMBER_ALLAN || config.trello.member_allan;
-var MEMBER_GREG = process.env.MEMBER_GREG || config.trello.member_greg;
-var MEMBER_STEVE = process.env.MEMBER_STEVE || config.trello.member_steve;
-var DOING_LIST = process.env.DOING_LIST || config.trello.doing_list;
-var TODO_LIST = process.env.TODO_LIST || config.trello.todo_list;
+var GoogleTokenProvider = require("refresh-token").GoogleTokenProvider,
+    async = require('async'),
+    request = require('request'),
+    _accessToken;
 
-var USERNAME = process.env.USERNAME || config.authenticate.username;
-var PASSWORD = process.env.PASSWORD || config.authenticate.password;
-
-// HTTP authentication
-var basic = auth.basic({realm: "Status Board"}, 
-	function(username,password,callback) {
-		callback(username === USERNAME && password === PASSWORD);
-	}
-);
-
-app.use(auth.connect(basic));
+// constants for .gitignored Google API credentials
+var CLIENT_ID = process.env.CLIENT_ID || config.google.client_id;
+var CLIENT_SECRET = process.env.CLIENT_SECRET || config.google.client_secret;
+var REFRESH_TOKEN = process.env.REFRESH_TOKEN || config.google.refresh_token;
+var ENDPOINT_OF_GDRIVE = process.env.ENDPOINT_OF_GDRIVE || config.google.endpoint_of_gdrive;
+var FOLDER_ID = process.env.FOLDER_ID || config.google.folder_id;
 
 // Jade configuration
 app.set('views', __dirname + '/views')
@@ -45,37 +35,81 @@ app.use('/stylesheet', express.static(__dirname + '/stylesheet'));
 app.use('/js', express.static(__dirname + '/js'));
 
 // Fire it up
-app.listen(process.env.PORT || 8080);
+//app.listen(process.env.PORT || 8080);
 
 // Routes
-app.route('/team').get(function(req,res) {
-	var team_statuses = [];
+//app.route('/team').get(function(req,res) {
+	//var shoefie_images = [];
 
-	var getStatus = function(member_id,member_name,member_bio) {
-		team_statuses.push({id: member_id, name: member_name, status: member_bio});
+// UPLOAD TO GOOGLE DRIVE
+async.waterfall([
+	  //-----------------------------
+	  // Obtain a new access token
+	  //-----------------------------
+	  function(callback) {
+	    var tokenProvider = new GoogleTokenProvider({
+	      'refresh_token': REFRESH_TOKEN,
+	      'client_id': CLIENT_ID,
+	      'client_secret': CLIENT_SECRET
+	    });
 
-		if (team_statuses.length === 3) {
-			res.render('team',{title:'Team', team_statuses: team_statuses});
-		}
-	};
+	    tokenProvider.getToken(callback);
+	  },
 
-	rest.get("https://www.googleapis.com/drive/v2/files/0B1BcWnbvBZ_CNG80WGwxYmVXdzA?key=AIzaSyDE0Tn-hC864r3ZFsKNREewW9AyaT96hBw");
+	  //--------------------------------------------
+	  // Retrieve the children in a specified folder
+	  // 
+	  // ref: https://developers.google.com/drive/v2/reference/files/children/list
+	  //-------------------------------------------
+	  function(accessToken, callback) {
+	    _accessToken = accessToken;
+	    request.get({
+	      'url': ENDPOINT_OF_GDRIVE + '/files/' + FOLDER_ID + '/children',
+	      'qs': {
+	        'access_token': accessToken
+	      }
+	    }, callback);
+	  },
 
-	rest.get('https://api.trello.com/1/members/' + MEMBER_ALLAN + '?key=' + APP_KEY + '&token=' + APP_TOKEN, {timeout:10000}).on('complete', function(data){
-		getStatus(data.id,data.fullName,data.bio);
-	}).on('timeout', function(ms){
-  		console.log('Trello did not return MEMBER_ALLAN response within ' + ms + ' ms');
-	});
+	//----------------------------
+	// Parse the response
+  	//----------------------------
+  	function(response, body, callback) {
+    	var list = JSON.parse(body);
+    	if (list.error) {
+      		return callback(list.error);
+    	}
+    	callback(null, list.items);
+	},
 
-	rest.get('https://api.trello.com/1/members/' + MEMBER_GREG + '?key=' + APP_KEY + '&token=' + APP_TOKEN, {timeout:10000}).on('complete', function(data){
-		getStatus(data.id,data.fullName,data.bio);
-	}).on('timeout', function(ms){
-  		console.log('Trello did not return MEMBER_GREG response within ' + ms + ' ms');
-	});
-
-	rest.get('https://api.trello.com/1/members/' + MEMBER_STEVE + '?key=' + APP_KEY + '&token=' + APP_TOKEN, {timeout:10000}).on('complete', function(data){
-		getStatus(data.id,data.fullName,data.bio);
-	}).on('timeout', function(ms){
-  		console.log('Trello did not return MEMBER_STEVE response within ' + ms + ' ms');
-	});
+	//-------------------------------------------
+	// Get the file information of the children.
+	//
+	// ref: https://developers.google.com/drive/v2/reference/files/get
+	//-------------------------------------------
+	function(children, callback) {
+	    async.map(children, function(child, cback) {
+	    	request.get({
+	        	'url': ENDPOINT_OF_GDRIVE + '/files/' + child.id,
+	        	'qs': {
+	          		'access_token': _accessToken
+	        	}
+	      	},
+	    	function(err, response, body) {
+	        	body = JSON.parse(body);
+	        	cback(null, {
+	        		'title': body.title,
+	        		'thumbnailLink': body.thumbnailLink,
+	        		'createdDate': body.createdDate
+	      		});
+	        });
+	  	}, callback);
+	  	//push objects with named time stamped image to shoefie_images array
+	}
+], function(err, results) {
+	if (!err) {
+		console.log(results);
+	}
 });
+
+//});
