@@ -16,7 +16,8 @@ var CLIENT_ID = process.env.CLIENT_ID || config.google.client_id;
 var CLIENT_SECRET = process.env.CLIENT_SECRET || config.google.client_secret;
 var REFRESH_TOKEN = process.env.REFRESH_TOKEN || config.google.refresh_token;
 var ENDPOINT_OF_GDRIVE = process.env.ENDPOINT_OF_GDRIVE || config.google.endpoint_of_gdrive;
-var FOLDER_ID = process.env.FOLDER_ID || config.google.folder_id;
+var STORE_1_FOLDER = process.env.STORE_1_ID || config.google.store_1_id;
+var STORE_4_FOLDER = process.env.STORE_4_ID || config.google.store_4_id;
 
 // Jade configuration
 app.set('views', __dirname + '/views')
@@ -35,14 +36,22 @@ app.use('/stylesheet', express.static(__dirname + '/stylesheet'));
 app.use('/js', express.static(__dirname + '/js'));
 
 // Fire it up
-//app.listen(process.env.PORT || 8080);
+app.listen(process.env.PORT || 8080);
 
 // Routes
-//app.route('/team').get(function(req,res) {
-	//var shoefie_images = [];
+app.route('/shoefies/:folder_id').get(function(req,res) {
+	var shoefie_images = [];
 
-// UPLOAD TO GOOGLE DRIVE
-async.waterfall([
+	if (req.params.folder_id === 'store_1') {
+		var FOLDER_ID = STORE_1_FOLDER;
+	} else if (req.params.folder_id === 'store_4') {
+		var FOLDER_ID = STORE_4_FOLDER;
+	}
+
+	//var FOLDER_ID = req.params.folder_id;
+
+	// UPLOAD TO GOOGLE DRIVE
+	async.waterfall([
 	  //-----------------------------
 	  // Obtain a new access token
 	  //-----------------------------
@@ -71,28 +80,28 @@ async.waterfall([
 	    }, callback);
 	  },
 
-	//----------------------------
-	// Parse the response
-  	//----------------------------
-  	function(response, body, callback) {
-    	var list = JSON.parse(body);
-    	if (list.error) {
-      		return callback(list.error);
-    	}
-    	callback(null, list.items);
-	},
+		//----------------------------
+		// Parse the response
+		//----------------------------
+		function(response, body, callback) {
+	  	var list = JSON.parse(body);
+	  	if (list.error) {
+	    		return callback(list.error);
+	  	}
+	  	callback(null, list.items);
+		},
 
-	//-------------------------------------------
-	// Get the file information of the children.
-	//
-	// ref: https://developers.google.com/drive/v2/reference/files/get
-	//-------------------------------------------
-	function(children, callback) {
+		//-------------------------------------------
+		// Get the file information of the children.
+		//
+		// ref: https://developers.google.com/drive/v2/reference/files/get
+		//-------------------------------------------
+		function(children, callback) {
 	    async.map(children, function(child, cback) {
 	    	request.get({
 	        	'url': ENDPOINT_OF_GDRIVE + '/files/' + child.id,
 	        	'qs': {
-	          		'access_token': _accessToken
+	          	'access_token': _accessToken
 	        	}
 	      	},
 	    	function(err, response, body) {
@@ -104,12 +113,13 @@ async.waterfall([
 	      		});
 	        });
 	  	}, callback);
-	  	//push objects with named time stamped image to shoefie_images array
-	}
-], function(err, results) {
-	if (!err) {
-		console.log(results);
-	}
-});
+		}
+	], function(err, results) {
+		if (!err) {
+			console.log(results);
+			shoefie_images = results.slice(0,3);
+			res.render('shoefie', {title: 'Shoefies', shoefie_images: shoefie_images});
+		}
+	});
 
-//});
+});
