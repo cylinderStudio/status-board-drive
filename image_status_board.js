@@ -19,6 +19,18 @@ var ENDPOINT_OF_GDRIVE = process.env.ENDPOINT_OF_GDRIVE || config.google.endpoin
 var STORE_1_FOLDER = process.env.STORE_1_ID || config.google.store_1_id;
 var STORE_4_FOLDER = process.env.STORE_4_ID || config.google.store_4_id;
 
+var USERNAME = process.env.USERNAME || config.authenticate.username;
+var PASSWORD = process.env.PASSWORD || config.authenticate.password;
+
+// HTTP authentication
+var basic = auth.basic({realm: "Status Board"}, 
+	function(username,password,callback) {
+		callback(username === USERNAME && password === PASSWORD);
+	}
+);
+
+app.use(auth.connect(basic));
+
 // Jade configuration
 app.set('views', __dirname + '/views')
 app.set('view engine', 'jade');
