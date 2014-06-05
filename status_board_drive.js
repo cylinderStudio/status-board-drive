@@ -3,7 +3,7 @@ var express = require('express');
 var app = express();
 var rest = require('restler');
 var auth = require('http-auth');
-// var config = require('./creds/config');	// comment out if deploying to Heroku
+var config = require('./creds/config');	// comment out if deploying to Heroku
 var stylus = require('stylus');
 
 var GoogleTokenProvider = require("refresh-token").GoogleTokenProvider,
@@ -56,11 +56,11 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 
 	if (req.params.folder_id === 'store_1') {
 		var FOLDER_ID = STORE_1_FOLDER;
+		var table_title = "Store 1";
 	} else if (req.params.folder_id === 'store_4') {
 		var FOLDER_ID = STORE_4_FOLDER;
+		var table_title = "Store 4";
 	}
-
-	//var FOLDER_ID = req.params.folder_id;
 
 	// UPLOAD TO GOOGLE DRIVE
 	async.waterfall([
@@ -98,7 +98,7 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 		function(response, body, callback) {
 	  	var list = JSON.parse(body);
 	  	if (list.error) {
-	    		return callback(list.error);
+	    	return callback(list.error);
 	  	}
 	  	callback(null, list.items);
 		},
@@ -118,8 +118,11 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 	      	},
 	    	function(err, response, body) {
 	        	body = JSON.parse(body);
+
+	        	var timeString = constructTimeString(body.title);
+
 	        	cback(null, {
-	        		'title': body.title,
+	        		'title': timeString,
 	        		'thumbnailLink': body.thumbnailLink,
 	        		'createdDate': body.createdDate
 	      		});
@@ -130,8 +133,30 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 		if (!err) {
 			// console.log(results);
 			shoefie_images = results.slice(0,3);
-			res.render('shoefie', {title: 'Shoefies', shoefie_images: shoefie_images});
+			res.render('shoefie', {title: 'Shoefies', table_title: table_title, shoefie_images: shoefie_images});
 		}
 	});
+
+// string/format helpers
+
+function constructTimeString(tempString) {
+	// assuming this format for now to avoid complex regex: STORE1_0601_0425.jpg
+	var mo = parseForZero(tempString.slice(7,9));
+	var day = parseForZero(tempString.slice(9,11));
+	var hr = parseForZero(tempString.slice(12,14));
+	var min = parseForZero(tempString.slice(14,16));
+
+	var tempString = mo + '/' + day + ' ' + hr + ':' + min;
+
+	return tempString;
+}
+
+function parseForZero(zeroString) {
+	if (zeroString.charAt(0) === "0") {
+		zeroString = zeroString.slice('-1');
+	}
+
+	return zeroString;
+}
 
 });

@@ -1,1 +1,1 @@
-web: node image_status_board.js
+web: node status_board_drive.js
