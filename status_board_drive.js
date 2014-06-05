@@ -132,7 +132,7 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 	], function(err, results) {
 		if (!err) {
 			// console.log(results);
-			shoefie_images = results.slice(0,3);
+			shoefie_images = results.sort().reverse().slice(0,3);
 			res.render('shoefie', {title: 'Shoefies', table_title: table_title, shoefie_images: shoefie_images});
 		}
 	});
