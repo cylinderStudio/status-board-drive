@@ -133,7 +133,9 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 		if (!err) {
 			shoefie_images = results.sort(
 				function(a,b) {
-					return b.createdDate - a.createdDate;
+					if (a.createdDate < b.createdDate) return 1;
+			    if (a.createdDate > b.createdDate) return -1;
+			    return 0;
 				}).slice(0,3);
 			res.render('shoefie', {title: 'Shoefies', table_title: table_title, shoefie_images: shoefie_images});
 		}
