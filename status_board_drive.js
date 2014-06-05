@@ -3,7 +3,7 @@ var express = require('express');
 var app = express();
 var rest = require('restler');
 var auth = require('http-auth');
-var config = require('./creds/config');	// comment out if deploying to Heroku
+// var config = require('./creds/config');	// comment out if deploying to Heroku
 var stylus = require('stylus');
 
 var GoogleTokenProvider = require("refresh-token").GoogleTokenProvider,
