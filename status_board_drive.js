@@ -144,7 +144,7 @@ function constructTimeString(tempString) {
 	var mo = parseForZero(tempString.slice(7,9));
 	var day = parseForZero(tempString.slice(9,11));
 	var hr = parseForZero(tempString.slice(12,14));
-	var min = parseForZero(tempString.slice(14,16));
+	var min = tempString.slice(14,16);
 
 	var tempString = mo + '/' + day + ' ' + hr + ':' + min;
 
