@@ -7,9 +7,9 @@ var auth = require('http-auth');
 var stylus = require('stylus');
 
 var GoogleTokenProvider = require("refresh-token").GoogleTokenProvider,
-    async = require('async'),
-    request = require('request'),
-    _accessToken;
+  async = require('async'),
+  request = require('request'),
+  _accessToken;
 
 // constants for .gitignored Google API credentials
 var CLIENT_ID = process.env.CLIENT_ID || config.google.client_id;
@@ -131,8 +131,10 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 		}
 	], function(err, results) {
 		if (!err) {
-			// console.log(results);
-			shoefie_images = results.sort().reverse().slice(0,3);
+			shoefie_images = results.sort(
+				function(a,b) {
+					return b.createdDate - a.createdDate;
+				}).slice(0,3);
 			res.render('shoefie', {title: 'Shoefies', table_title: table_title, shoefie_images: shoefie_images});
 		}
 	});
