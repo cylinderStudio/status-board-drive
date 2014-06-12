@@ -145,10 +145,11 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 
 function constructTimeString(tempString) {
 	// assuming this format for now to avoid complex regex: STORE1_0601_0425.jpg
-	var mo = parseForZero(tempString.slice(7,9));
-	var day = parseForZero(tempString.slice(9,11));
-	var hr = parseForZero(tempString.slice(12,14));
-	var min = tempString.slice(14,16);
+	// assuming this format for now to avoid complex regex: 1_0601_0425.jpg
+	var mo = parseForZero(tempString.slice(0,2));
+	var day = parseForZero(tempString.slice(2,4));
+	var hr = parseForZero(tempString.slice(7,9));
+	var min = tempString.slice(10,13);
 
 	var tempString = mo + '/' + day + ' ' + hr + ':' + min;
 
