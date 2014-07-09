@@ -117,6 +117,9 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 	        	}
 	      	},
 	    	function(err, response, body) {
+	    		console.log(err);
+	    		console.log(body);
+	    		
         	if (!err && body.title && body.thumbnailLink && body.createdDate) {
         		body = JSON.parse(body);
 						var timeString = constructTimeString(body.title);
