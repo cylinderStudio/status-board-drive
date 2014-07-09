@@ -62,7 +62,7 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 		var table_title = "Store 4";
 	}
 
-	// UPLOAD TO GOOGLE DRIVE
+	// RETRIEVE FROM GOOGLE DRIVE
 	async.waterfall([
 	  //-----------------------------
 	  // Obtain a new access token
@@ -117,18 +117,24 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 	        	}
 	      	},
 	    	function(err, response, body) {
-	        	body = JSON.parse(body);
-
-	        	console.log('BODY: ');
-	        	console.log(body);
-	        	var timeString = constructTimeString(body.title);
-
-	        	cback(null, {
+        	if (!err && body.title && body.thumbnailLink && body.createdDate) {
+        		body = JSON.parse(body);
+						var timeString = constructTimeString(body.title);
+						var cbackObject = {
 	        		'title': timeString,
 	        		'thumbnailLink': body.thumbnailLink,
 	        		'createdDate': body.createdDate
-	      		});
-	        });
+	      		}
+        	} else {
+        		var dummyDate = Date.now();
+        		var cbackObject = {
+	        		'title': 'No image retrieved',
+	        		'thumbnailLink': '',
+	        		'createdDate': dummyDate
+	      		}
+        	}
+        	cback(null, cbackObject);
+        });
 	  	}, callback);
 		}
 	], function(err, results) {
@@ -136,7 +142,7 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 			shoefie_images = results.sort(
 				function(a,b) {
 					if (a.createdDate < b.createdDate) return 1;
-			    if (a.createdDate > b.createdDate) return -1;
+			    if (a.createdDate >= b.createdDate) return -1;
 			    return 0;
 				}).slice(0,3);
 			res.render('shoefie', {title: 'Shoefies', table_title: table_title, shoefie_images: shoefie_images});
