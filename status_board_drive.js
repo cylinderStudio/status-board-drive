@@ -118,9 +118,9 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 	      	},
 	    	function(err, response, body) {
 	    		if (!err) {
-	    			console.log('xxx');
-	    			console.log(body);
+	    			console.log('body title: ');
         		body = JSON.parse(body);
+        		console.log(body.title);
 						var timeString = constructTimeString(body.title);
 						var cbackObject = {
 	        		'title': timeString,
@@ -154,6 +154,7 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 // string/format helpers
 
 function constructTimeString(tempString) {
+	console.log('time string' + tempString);
 	// assuming this format for now to avoid complex regex: 106010425.jpg (was 1_0601_0425.jpg)
 	var mo = parseForZero(tempString.slice(1,3));
 	var day = parseForZero(tempString.slice(3,5));
@@ -166,6 +167,7 @@ function constructTimeString(tempString) {
 }
 
 function parseForZero(zeroString) {
+	console.log('zero string: ' + zeroString);
 	if (zeroString.charAt(0) === "0") {
 		zeroString = zeroString.slice('-1');
 	}
