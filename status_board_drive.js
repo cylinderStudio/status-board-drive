@@ -117,8 +117,9 @@ app.route('/shoefies/:folder_id').get(function(req,res) {
 	        	}
 	      	},
 	    	function(err, response, body) {
-	    		console.log()
 	    		if (!err) {
+	    			console.log('xxx');
+	    			console.log(body);
         		body = JSON.parse(body);
 						var timeString = constructTimeString(body.title);
 						var cbackObject = {
